@@ -29,14 +29,19 @@ export function startTracking(videoElement, onResults) {
       const label = handednessPerHand[i]?.label ?? `hand-${i}`;
       seenKeys.add(label);
 
-      const prevTips = smoothedByHand.get(label);
+      const prev = smoothedByHand.get(label);
+
+      const rawWrist = { x: 1 - landmarks[0].x, y: landmarks[0].y };
+      const wrist = smooth(prev?.wrist, rawWrist, SMOOTHING_FACTOR);
+
       const tips = FINGERTIP_INDICES.map((idx, j) => {
         const raw = { x: 1 - landmarks[idx].x, y: landmarks[idx].y };
-        return smooth(prevTips?.[j], raw, SMOOTHING_FACTOR);
+        return smooth(prev?.tips?.[j], raw, SMOOTHING_FACTOR);
       });
-      smoothedByHand.set(label, tips);
 
-      return { handedness: label, tips };
+      smoothedByHand.set(label, { wrist, tips });
+
+      return { handedness: label, wrist, tips };
     });
 
     for (const key of smoothedByHand.keys()) {
